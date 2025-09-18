@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawPilot - Dashboard</title>
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="dashboard-body">
+    <header class="dashboard-header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}" alt="LawPilot Logo" class="header-logo">
+            <span class="header-app-name">
+                LawPilot <span class="header-slogan">AI-Driven Legal Assistant</span>
+            </span>
+        </div>
+        
+        <div class="header-right">
+            <span class="user-info">
+                <i class="fas fa-user"></i> 
+                {{ user_name }} ({{ user_type | capitalize }})
+            </span>
+            <form action="/logout" method="POST" style="display:inline;">
+                <button type="submit" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
+            </form>
+        </div>
+    </header>
+
+    <div class="dashboard-main-content">
+        <!-- LEFT SIDEBAR -->
+        <aside class="dashboard-sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-target="aiAssistantSection">
+                        <a href="#"><i class="fas fa-robot"></i> AI Assistant</a>
+                    </li>
+                    <li class="nav-item" data-target="findLawyerSection">
+                        <a href="#"><i class="fas fa-gavel"></i> Find Lawyer</a>
+                    </li>
+                    <li class="nav-item" data-target="myCasesSection">
+                        <a href="#"><i class="fas fa-file-alt"></i> My Cases</a>
+                    </li>
+                    <li class="nav-item" data-target="settingsSection">
+                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>&copy; 2025 LawPilot</p>
+            </div>
+        </aside>
+
+        <!-- MAIN CONTENT -->
+        <div class="main-content-wrapper">
+            <!-- AI Assistant -->
+            <main id="aiAssistantSection" class="dashboard-chat-area main-content-section active">
+                <div class="chat-header">
+                    <i class="fas fa-robot chat-icon"></i>
+                    <div class="chat-header-text">
+                        <h2>Legal Assistant</h2>
+                        <p>Ask me anything about legal matters</p>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-bubble ai-message">
+                        "नमस्कार {{ user_name }}! मी लॉ पायलट आहे, तुमची एआय-आधारित कायदेशीर सहाय्यक. 
+                        तुमच्या कायदेशीर प्रश्नांमध्ये मी आज तुम्हाला कशी मदत करू शकेन?"
+                        <span class="message-timestamp">{{ current_time }}</span>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea class="chat-textarea" placeholder="Ask a legal question..."></textarea>
+                    <button class="chat-send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </main>
+
+            <!-- FIND LAWYER -->
+            <section id="findLawyerSection" class="main-content-section hidden">
+                <div class="card full-width-card">
+                    <h3><i class="fas fa-gavel"></i> Find a Lawyer</h3>
+                    <p>This section will allow you to search for and connect with legal professionals.</p>
+                    <div class="search-bar">
+                        <input type="text" placeholder="Search by name, specialty...">
+                        <button><i class="fas fa-search"></i> Search</button>
+                    </div>
+                    <p class="placeholder-text">Lawyer directory coming soon!</p>
+                </div>
+            </section>
+
+            <!-- MY CASES -->
+            <section id="myCasesSection" class="main-content-section hidden">
+                <div class="card full-width-card">
+                    <h3><i class="fas fa-file-alt"></i> My Cases</h3>
+                    <p>Manage your ongoing and past legal cases here.</p>
+                    <ul class="case-list-placeholder">
+                        {% if cases %}
+                            {% for case in cases %}
+                                <li><strong>Case #{{ case.id }}:</strong> {{ case.title }} - {{ case.status }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>No cases found</li>
+                        {% endif %}
+                    </ul>
+                </div>
+            </section>
+
+            <!-- SETTINGS -->
+            <section id="settingsSection" class="main-content-section hidden">
+                <div class="card full-width-card">
+                    <h3><i class="fas fa-cog"></i> Settings</h3>
+                    <div class="setting-item">
+                        <span>Dark Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Notification Preferences</span>
+                        <button class="setting-button">Manage</button>
+                    </div>
+                    <p class="placeholder-text">More settings coming soon!</p>
+                </div>
+            </section>
+        </div>
+
+        <!-- RIGHT SIDEBAR -->
+        <aside class="dashboard-right-sidebar">
+            <div class="quick-stats-card card">
+                <h3><i class="fas fa-bolt"></i> Quick Stats</h3>
+                <div class="stat-item">
+                    <span>Available Lawyers</span>
+                    <strong>{{ available_lawyers }}</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Practice Areas</span>
+                    <strong>{{ practice_areas }}</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Average Rating</span>
+                    <strong>{{ avg_rating }}<i class="fas fa-star star-icon"></i></strong>
+                </div>
+            </div>
+
+            <!-- Top Lawyers Section -->
+            <div class="top-lawyers-card card">
+                <h3><i class="fas fa-users"></i> Top Lawyers</h3>
+                <ul class="lawyer-list">
+                    {% for lawyer in top_lawyers %}
+                    <li>
+                        <img src="{{ lawyer.image }}" alt="{{ lawyer.name }}" class="lawyer-avatar">
+                        <div class="lawyer-details">
+                            <span class="lawyer-name">{{ lawyer.name }}</span>
+                            <span class="lawyer-specialty">{{ lawyer.specialty }}</span>
+                        </div>
+                        <div class="lawyer-rating">
+                            <span>{{ lawyer.rating }}<i class="fas fa-star star-icon"></i></span>
+                            <span class="lawyer-cases">{{ lawyer.cases }} cases</span>
+                        </div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <!-- JS -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>

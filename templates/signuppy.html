@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawPilot - Sign Up</title>
+
+    <!-- Load CSS from Flask static folder -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}" 
+                 alt="LawPilot Logo" 
+                 class="login-logo">
+            <h1>Create Account</h1>
+            <p class="slogan">Join LawPilot Today</p>
+        </div>
+
+        <div class="login-card">
+            <form id="signupForm">
+                <!-- Full Name -->
+                <div class="form-group">
+                    <label for="full_name">Full Name</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="full_name" name="full_name" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+
+                <!-- Email -->
+                <div class="form-group">
+                    <label for="email_address">Email Address</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-envelope input-icon"></i>
+                        <input type="email" id="email_address" name="email_address" placeholder="Enter your email" required>
+                    </div>
+                </div>
+
+                <!-- Password -->
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Create a password" required>
+                    </div>
+                </div>
+
+                <!-- Sign Up Button -->
+                <button type="submit" class="sign-in-button">Sign Up</button>
+
+                <!-- Link to Login Page -->
+                <p class="sign-up-link">
+                    Already have an account? 
+                    <a href="{{ url_for('login') }}">Sign In</a>
+                </p>
+
+                <!-- Message Display -->
+                <p id="signupMessage" class="login-message"></p>
+            </form>
+        </div>
+    </div>
+
+    <!-- Load JS from Flask static folder -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
