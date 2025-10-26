@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LawPilot - Lawyer Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
+                 alt="LawPilot Logo" class="login-logo">
+            <h1>Welcome, {{ lawyer_name }}</h1>
+            <p class="slogan">Expertise: {{ expertise }}</p>
+        </div>
+
+        <div class="login-card">
+            <p>You are logged in as a Lawyer.</p>
+            <form action="/logout" method="POST">
+                <button type="submit" class="sign-in-button">Logout</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>

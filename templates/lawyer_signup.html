@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawPilot - Lawyer Sign Up</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}">
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
+                alt="LawPilot Logo" class="login-logo">
+            <h1>LawPilot</h1>
+            <p class="slogan">AI-Driven Legal Assistant</p>
+            <p class="tagline">Lawyer Registration Portal</p>
+        </div>
+
+        <div class="login-card">
+            <div class="account-type-toggle">
+                <button type="button" class="toggle-button" data-type="user" onclick="goToLogin('user')">
+                    <i class="fas fa-user"></i> User
+                </button>
+                <button type="button" class="toggle-button active" data-type="lawyer" onclick="goToLogin('lawyer')">
+                    <i class="fas fa-gavel"></i> Lawyer
+                </button>
+            </div>
+
+            <form id="lawyerSignupForm" method="POST" action="/lawyer/signup">
+                <div class="form-group">
+                    <label for="name">Full Name</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" id="name" name="name" placeholder="Enter your full name" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user-tie input-icon"></i>
+                        <input type="text" id="username" name="username" placeholder="Create a username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="expertise">Lawyer Specialty</label>
+                    <div class="input-icon-wrapper select-wrapper">
+                        <i class="fas fa-gavel input-icon"></i>
+                        <select id="expertise" name="expertise" required>
+                            <option value="" disabled selected>Select your specialty</option>
+                            <option value="General Criminal Law">General Criminal Law</option>
+                            <option value="Criminal Conspiracy & Abetment">Criminal Conspiracy & Abetment</option>
+                            <option value="Women's & Child Protection Law">Women's & Child Protection Law</option>
+                            <option value="Personal Injury & Assault Law">Personal Injury & Assault Law</option>
+                            <option value="Constitutional & State Security Law">Constitutional & State Security Law
+                            </option>
+                            <option value="Defense & Military Law">Defense & Military Law</option>
+                            <option value="Election & Political Law">Election & Political Law</option>
+                            <option value="Financial & Currency Crimes">Financial & Currency Crimes</option>
+                            <option value="Public Order & Safety Law">Public Order & Safety Law</option>
+                            <option value="Public Servant & Corruption Law">Public Servant & Corruption Law</option>
+                            <option value="Administrative & Contempt Law">Administrative & Contempt Law</option>
+                            <option value="Evidence & Justice Law">Evidence & Justice Law</option>
+                            <option value="Public Health & Safety Law">Public Health & Safety Law</option>
+                            <option value="Religious & Cultural Law">Religious & Cultural Law</option>
+                            <option value="Property & Theft Law">Property & Theft Law</option>
+                            <option value="Documentation & Fraud Law">Documentation & Fraud Law</option>
+                            <option value="Civil & Criminal Defamation Law">Civil & Criminal Defamation Law</option>
+                        </select>
+                    </div>
+                </div>
+
+
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="confirm_password">Confirm Password</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="confirm_password" name="confirm_password"
+                            placeholder="Confirm your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="sign-in-button">Sign Up</button>
+                <p class="sign-up-link">Already have an account?
+                    <a href="{{ url_for('lawyer_login') }}">Login</a>
+                </p>
+
+                {% if error %}
+                <p id="signupMessage" class="login-message" style="color: red;">{{ error }}</p>
+                {% else %}
+                <p id="signupMessage" class="login-message"></p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function goToLogin(type) {
+            if (type === 'user') {
+                window.location.href = '/login';
+            } else if (type === 'lawyer') {
+                window.location.href = '/lawyer/login';
+            }
+        }
+    </script>
+</body>
+
+</html>

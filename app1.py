@@ -3,6 +3,7 @@ import pickle
 import numpy as np
 from pymongo import MongoClient
 import os
+import jwt
 
 # --- FLASK IMPORTS ---
 from flask import Flask, render_template, request, redirect, url_for, jsonify
@@ -81,7 +82,6 @@ def signup():
 # --- CHAT ROUTE ---
 @app.route('/chat', methods=['POST'])
 def chat():
-    # ✅ Check for None explicitly
     if model is None or vectorizer is None or multilabel_binarizer is None or collection is None:
         return jsonify({'response': 'Error: The model or database is not configured correctly on the server.'}), 500
 
@@ -92,28 +92,28 @@ def chat():
         return jsonify({'error': 'No message provided'}), 400
 
     try:
-        # 1. Vectorize the input
         vectorized_message = vectorizer.transform([user_message])
-
-        # 2. Predict
         predicted_binary_matrix = model.predict(vectorized_message)
-
-        # 3. Convert to section codes
         predicted_section_codes = multilabel_binarizer.inverse_transform(predicted_binary_matrix)[0]
 
-        # 4. Format response
         if len(predicted_section_codes) == 0:
             ai_response = "तुमच्या परिस्थितीसाठी कोणतीही विशिष्ट कायदेशीर कलम सापडली नाहीत."
         else:
             predictions_html = []
+            import re
             for sec_code in predicted_section_codes:
-                section_name = f"BNS {sec_code}"
-                
-                # Find in MongoDB
-                doc = collection.find_one({"section": section_name})
+                # Extract only the starting digits, ignore any parentheses
+                match = re.match(r'(\d+)', sec_code)
+                base_number = match.group(1) if match else sec_code
+
+                # Match any section that starts with this number
+                regex = f"^BNS {base_number}"  
+
+                doc = collection.find_one({"section": {"$regex": regex}})
                 explanation = doc["explanation"] if doc and "explanation" in doc else "स्पष्टीकरण आढळले नाही."
-                
-                predictions_html.append(f"<b>कलम: {section_name}</b><br>{explanation}")
+                section_display = doc["section"] if doc and "section" in doc else sec_code
+
+                predictions_html.append(f"<b>कलम: {section_display}</b><br>{explanation}")
 
             ai_response = "<br><br>".join(predictions_html)
 
@@ -122,6 +122,7 @@ def chat():
         ai_response = "क्षमस्व, तुमच्या विनंतीवर प्रक्रिया करताना एक त्रुटी आली."
 
     return jsonify({'response': ai_response})
+
 
 
 # --- FILE UPLOAD ROUTE ---

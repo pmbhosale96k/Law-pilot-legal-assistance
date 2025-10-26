@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!-- <!DOCTYPE html>
 <html lang="en">
 <head>
 <meta charset="UTF-8">
@@ -80,6 +80,43 @@
         <input id="username" placeholder="Username"><br>
         <input id="password" type="password" placeholder="Password"><br>
         <button onclick="login()">Login</button>
+    </div>
+</body>
+</html> -->
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>LawPilot - Login</title>
+    <style>
+        body { margin: 0; font-family: Arial, sans-serif; background: #edf0ff; color: #000; }
+        .header { padding: 20px 40px; background: #1a237e; color: #fff; text-align: center; }
+        .header h1 { color: #ffca28; font-size: 40px; }
+        .login-container { width: 300px; margin: 100px auto; padding: 30px; background: #fffde7; border-radius: 20px; text-align: center; }
+        .login-container input { width: 100%; padding: 10px; margin-bottom: 20px; border-radius: 10px; border: none; background: #edf0ff; }
+        .login-container button { padding: 10px 20px; background: #ff5252; color: #fff; border: none; border-radius: 10px; cursor: pointer; }
+        .login-container button:hover { background: #ff1744; }
+        .message { color: red; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>LawPilot</h1>
+    </div>
+
+    <div class="login-container">
+        <h2>Login</h2>
+        {% if error %}
+            <p class="message">{{ error }}</p>
+        {% endif %}
+        <form method="POST" action="{{ url_for('login') }}">
+            <input type="text" name="username" placeholder="Username" required><br>
+            <input type="password" name="password" placeholder="Password" required><br>
+            <button type="submit">Login</button>
+        </form>
+        <p>Don't have an account? <a href="{{ url_for('signup') }}">Sign Up</a></p>
     </div>
 </body>
 </html>

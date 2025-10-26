@@ -912,3 +912,79 @@ input:checked + .slider:before {
         padding: 15px;
     }
 }
+
+/* ----------- Fix for Select Dropdown Styling ----------- */
+/* Dropdown styling for lawyer specialty */
+.input-icon-wrapper.select-wrapper {
+    position: relative;
+}
+
+.input-icon-wrapper.select-wrapper select {
+    width: 100%;
+    padding: 12px 12px 12px 40px; /* space for icon */
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    font-size: 16px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-color: #fff;
+}
+
+.input-icon-wrapper.select-wrapper i {
+    position: absolute;
+    top: 50%;
+    left: 12px;
+    transform: translateY(-50%);
+    color: #ff6600; /* match your orange theme */
+    pointer-events: none;
+}
+
+
+.select-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.select-wrapper select {
+    width: 100%;
+    padding: 12px 12px 12px 38px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    background-color: #fff;
+    font-size: 15px;
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    color: #333;
+    cursor: pointer;
+}
+
+/* Dropdown arrow */
+.select-wrapper::after {
+    content: '\f078'; /* FontAwesome chevron-down */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #ff6a00;
+    pointer-events: none;
+}
+
+/* Match icon spacing */
+.select-wrapper .input-icon {
+    left: 10px;
+    color: #ff6a00;
+}
+
+/* On focus */
+.select-wrapper select:focus {
+    border-color: #ff6a00;
+    box-shadow: 0 0 4px rgba(255, 106, 0, 0.5);
+    outline: none;
+}
+
+

@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LawPilot - Lawyer Sign In</title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link rel="icon" href="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}">
+</head>
+
+<body class="login-body">
+    <div class="login-container">
+        <div class="login-header">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
+                alt="LawPilot Logo" class="login-logo">
+            <h1>LawPilot</h1>
+            <p class="slogan">AI-Driven Legal Assistant</p>
+            <p class="tagline">Lawyer Login Portal</p>
+        </div>
+
+        <div class="login-card">
+            <div class="account-type-toggle">
+                <button type="button" class="toggle-button" data-type="user" onclick="goToLogin('user')">
+                    <i class="fas fa-user"></i> User
+                </button>
+                <button type="button" class="toggle-button active" data-type="lawyer" onclick="goToLogin('lawyer')">
+                    <i class="fas fa-gavel"></i> Lawyer
+                </button>
+            </div>
+
+            <form id="lawyerLoginForm" method="POST" action="/lawyer/login">
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-user-tie input-icon"></i>
+                        <input type="text" id="username" name="username" placeholder="Enter your username" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="input-icon-wrapper">
+                        <i class="fas fa-lock input-icon"></i>
+                        <input type="password" id="password" name="password" placeholder="Enter your password" required>
+                    </div>
+                </div>
+
+                <button type="submit" class="sign-in-button">Sign In</button>
+                <p class="sign-up-link">Don't have an account?
+                    <a href="{{ url_for('lawyer_signup') }}">Sign Up</a>
+                </p>
+
+                {% if error %}
+                <p id="loginMessage" class="login-message" style="color: red;">{{ error }}</p>
+                {% else %}
+                <p id="loginMessage" class="login-message"></p>
+                {% endif %}
+            </form>
+        </div>
+    </div>
+
+    <script>
+        function goToLogin(type) {
+            if (type === 'user') {
+                window.location.href = '/login';
+            } else if (type === 'lawyer') {
+                window.location.href = '/lawyer/login';
+            }
+        }
+    </script>
+</body>
+
+</html>
