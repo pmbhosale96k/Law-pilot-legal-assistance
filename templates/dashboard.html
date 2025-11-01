@@ -1,39 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LawPilot - Dashboard</title>
 
-    <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-
-    <!-- Google Fonts -->
+    
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
-    <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+
 </head>
-
 <body class="dashboard-body">
-
-    <!-- HEADER -->
     <header class="dashboard-header">
         <div class="header-left">
-            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
-                alt="LawPilot Logo" class="header-logo">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}" alt="LawPilot Logo" class="header-logo">
             <span class="header-app-name">
                 LawPilot <span class="header-slogan">AI-Driven Legal Assistant</span>
             </span>
         </div>
+        
         <div class="header-right">
             <span class="user-info">
-                <i class="fas fa-user"></i>
-                
-                {{ user_name or "User" }} ({{ user_type | capitalize or "User" }})
+                <i class="fas fa-user"></i> 
+                {{ user_name }} ({{ user_type | capitalize }})
             </span>
-
             <form action="/logout" method="POST" style="display:inline;">
                 <button type="submit" class="logout-button">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -42,10 +34,7 @@
         </div>
     </header>
 
-    <!-- MAIN CONTENT -->
     <div class="dashboard-main-content">
-
-        <!-- LEFT SIDEBAR -->
         <aside class="dashboard-sidebar">
             <nav class="sidebar-nav">
                 <ul>
@@ -53,7 +42,10 @@
                         <a href="#"><i class="fas fa-robot"></i> AI Assistant</a>
                     </li>
                     <li class="nav-item" data-target="findLawyerSection">
-                        <a href="#"><i class="fas fa-gavel"></i> Find Lawyer</a>
+                       <a href="/find-lawyer" class="sidebar-link">
+    <i class="fas fa-gavel"></i> Find Lawyer
+</a>
+
                     </li>
                     <li class="nav-item" data-target="myCasesSection">
                         <a href="#"><i class="fas fa-file-alt"></i> My Cases</a>
@@ -68,10 +60,7 @@
             </div>
         </aside>
 
-        <!-- CONTENT SECTIONS -->
         <div class="main-content-wrapper">
-
-            <!-- AI ASSISTANT -->
             <main id="aiAssistantSection" class="dashboard-chat-area main-content-section active">
                 <div class="chat-header">
                     <i class="fas fa-robot chat-icon"></i>
@@ -83,7 +72,7 @@
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-bubble ai-message">
-                        "नमस्कार {{ user_name }}! मी लॉ पायलट आहे, तुमची एआय-आधारित कायदेशीर सहाय्यक.
+                        "नमस्कार {{ user_name }}! मी लॉ पायलट आहे, तुमची एआय-आधारित कायदेशीर सहाय्यक. 
                         तुमच्या कायदेशीर प्रश्नांमध्ये मी आज तुम्हाला कशी मदत करू शकेन?"
                         <span class="message-timestamp">{{ current_time }}</span>
                     </div>
@@ -97,36 +86,56 @@
                 </div>
             </main>
 
-            <!-- FIND LAWYER -->
             <section id="findLawyerSection" class="main-content-section hidden">
                 <div class="card full-width-card">
-                    <h3><i class="fas fa-gavel"></i> Find a Lawyer</h3>
-                    <p>This section will allow you to search for and connect with legal professionals.</p>
+                    <h3><i class="fas fa-gavel"></i> Lawyer Directory</h3>
+                    <p>Search for and connect with legal professionals based on their expertise.</p>
                     <div class="search-bar">
                         <input type="text" placeholder="Search by name, specialty...">
                         <button><i class="fas fa-search"></i> Search</button>
                     </div>
-                    <p class="placeholder-text">Lawyer directory coming soon!</p>
+                    
+                    {% if lawyers and lawyers | length > 0 %}
+                        <table class="lawyer-table">
+                            <thead>
+                                <tr>
+                                    <th>Name</th>
+                                    <th>Expertise / Specialty</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for lawyer in lawyers %}
+                                <tr>
+                                    <td>{{ lawyer.name }}</td>
+                                    <td>{{ lawyer.expertise }}</td>
+                                    <td><button class="contact-button"><i class="fas fa-handshake"></i> Connect</button></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="placeholder-text">No lawyers found in the database at this time.</p>
+                    {% endif %}
                 </div>
             </section>
 
-            <!-- MY CASES -->
             <section id="myCasesSection" class="main-content-section hidden">
                 <div class="card full-width-card">
                     <h3><i class="fas fa-file-alt"></i> My Cases</h3>
                     <p>Manage your ongoing and past legal cases here.</p>
-
-                    <button id="showCasesBtn" class="setting-button" style="margin-bottom:10px;">
-                        <i class="fas fa-history"></i> Show My Cases
-                    </button>
-
-                    <div id="casesContainer" class="case-list" style="max-height:400px; overflow-y:auto;">
-                        <p class="placeholder-text">Click “Show My Cases” to view your query history.</p>
-                    </div>
+                    <ul class="case-list-placeholder">
+                        {% if cases %}
+                            {% for case in cases %}
+                                <li><strong>Case #{{ case.id }}:</strong> {{ case.title }} - {{ case.status }}</li>
+                            {% endfor %}
+                        {% else %}
+                            <li>No cases found</li>
+                        {% endif %}
+                    </ul>
                 </div>
             </section>
 
-            <!-- SETTINGS -->
             <section id="settingsSection" class="main-content-section hidden">
                 <div class="card full-width-card">
                     <h3><i class="fas fa-cog"></i> Settings</h3>
@@ -146,14 +155,21 @@
             </section>
         </div>
 
-        <!-- RIGHT SIDEBAR -->
         <aside class="dashboard-right-sidebar">
             <div class="quick-stats-card card">
                 <h3><i class="fas fa-bolt"></i> Quick Stats</h3>
-                <div class="stat-item"><span>Available Lawyers</span><strong>{{ available_lawyers }}</strong></div>
-                <div class="stat-item"><span>Practice Areas</span><strong>{{ practice_areas }}</strong></div>
-                <div class="stat-item"><span>Average Rating</span><strong>{{ avg_rating }}<i
-                            class="fas fa-star star-icon"></i></strong></div>
+                <div class="stat-item">
+                    <span>Available Lawyers</span>
+                    <strong>{{ available_lawyers }}</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Practice Areas</span>
+                    <strong>{{ practice_areas }}</strong>
+                </div>
+                <div class="stat-item">
+                    <span>Average Rating</span>
+                    <strong>{{ avg_rating }}<i class="fas fa-star star-icon"></i></strong>
+                </div>
             </div>
 
             <div class="top-lawyers-card card">
@@ -161,14 +177,14 @@
                 <ul class="lawyer-list">
                     {% for lawyer in top_lawyers %}
                     <li>
-                        <img src="{{ lawyer.image }}" alt="{{ lawyer.name }}" class="lawyer-avatar">
+                        <img src="{{ url_for('static', filename='jpg2png/default_avatar.png') }}" alt="{{ lawyer.name }}" class="lawyer-avatar">
                         <div class="lawyer-details">
                             <span class="lawyer-name">{{ lawyer.name }}</span>
                             <span class="lawyer-specialty">{{ lawyer.specialty }}</span>
                         </div>
                         <div class="lawyer-rating">
                             <span>{{ lawyer.rating }}<i class="fas fa-star star-icon"></i></span>
-                            <span>{{ lawyer.cases }} cases</span>
+                            <span class="lawyer-cases">{{ lawyer.cases }} cases</span>
                         </div>
                     </li>
                     {% endfor %}
@@ -177,8 +193,6 @@
         </aside>
     </div>
 
-    <!-- JS -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
-
 </html>

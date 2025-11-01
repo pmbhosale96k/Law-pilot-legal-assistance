@@ -54,12 +54,32 @@ def main():
     if 'username' not in session:
         return redirect(url_for('login'))
 
+    # Fetch user history cases from MongoDB
+    user_email = session['email']
+    cases_cursor = history_cases.find({"email": user_email}).sort("timestamp", -1)
+    cases = []
+
+    for idx, c in enumerate(cases_cursor, start=1):
+        # Join all predicted sections into a single string
+        predicted_sections = ", ".join(c.get("predicted_sections", [])) or "No prediction"
+
+        # Optional: Include timestamp formatted nicely
+        timestamp = c.get("timestamp")
+        timestamp_str = timestamp.strftime("%d/%m/%Y, %I:%M %p") if timestamp else "Unknown time"
+
+        cases.append({
+            "id": idx,
+            "title": f"{timestamp_str} - {c.get('query', 'N/A')}",
+            "status": predicted_sections
+        })
+
     return render_template(
         'dashboard.html',
-        user_name=session.get('username', 'User'),  # matches your template
-        user_type=session.get('user_type', 'user')  # matches your template
+        user_name=session.get('username', 'User'),
+        user_type=session.get('user_type', 'user'),
+        cases=cases,
+        
     )
-
 
 
 # ------------------- Signup for Users -------------------
@@ -89,6 +109,7 @@ def signup():
 
 
 # ------------------- Login for Users -------------------
+# ------------------- Login for Users -------------------
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
@@ -109,11 +130,12 @@ def login():
         session.clear()
         session['username'] = user["fullname"]
         session['email'] = user["email"]
-        session['user_type'] = "user"
+        session['user_type'] = "user"   # <-- add this
 
         return redirect(url_for('main'))
 
     return render_template('indexpy.html')
+
 
 
 # ------------------- Lawyer Signup -------------------
