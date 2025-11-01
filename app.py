@@ -6,6 +6,8 @@ from pymongo import MongoClient
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
+from datetime import datetime
+import re
 
 # ------------------- Load environment variables -------------------
 load_dotenv()
@@ -15,12 +17,9 @@ app = Flask(__name__)
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "defaultsecret")
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
-
-# Optional: cookie settings
-# Ensure cookies work locally
 app.config['SESSION_COOKIE_NAME'] = 'lawpilot_session'
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = False  # True only if using HTTPS
+app.config['SESSION_COOKIE_SECURE'] = False  # True only if HTTPS
 
 CORS(app)
 
@@ -36,9 +35,9 @@ try:
     client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017/"))
     db = client["lawpilot"]
     users_collection = db["users"]
-    # \aefwefwe ............
-    lawyers_collection = db["lawyers"]     
+    lawyers_collection = db["lawyers"]
     bns_collection = db["bnssections"]
+    history_cases = db["historycases"]
 
     client.admin.command("ping")
     print("✅ Model and MongoDB connected successfully!")
@@ -48,15 +47,18 @@ except Exception as e:
     model = vectorizer = multilabel_binarizer = None
     users_collection = bns_collection = None
 
+
 # ------------------- Routes -------------------
 @app.route('/')
 def main():
-    print("SESSION at / :", dict(session))
     if 'username' not in session:
-        print("No session, redirecting to login")
         return redirect(url_for('login'))
-    print("Session found, rendering dashboard for:", session['username'])
-    return render_template('dashboard.html', username=session['username'])
+
+    return render_template(
+        'dashboard.html',
+        user_name=session.get('username', 'User'),  # matches your template
+        user_type=session.get('user_type', 'user')  # matches your template
+    )
 
 
 
@@ -85,21 +87,18 @@ def signup():
 
     return render_template('signuppy.html')
 
-# ------------------- Login for Users  -------------------
+
+# ------------------- Login for Users -------------------
 @app.route('/login', methods=["GET", "POST"])
 def login():
-    print("Login accessed. Method:", request.method)
-    
     if request.method == "POST":
         email = request.form.get("email")
         password = request.form.get("password")
-        print("POST Data:", email, password)
 
         if not email or not password:
             return render_template('indexpy.html', error="Please enter email and password")
 
         user = users_collection.find_one({"email": email})
-        print("User from DB:", user)
 
         if not user:
             return render_template('indexpy.html', error="Email does not exist")
@@ -107,15 +106,15 @@ def login():
         if not check_password_hash(user["password"], password):
             return render_template('indexpy.html', error="Incorrect password")
 
-        # Corrected session
-        session.clear()  
+        session.clear()
         session['username'] = user["fullname"]
-        session['email'] = user["email"]  # keep only this
+        session['email'] = user["email"]
+        session['user_type'] = "user"
 
-        print("Session after login:", dict(session))
         return redirect(url_for('main'))
 
     return render_template('indexpy.html')
+
 
 # ------------------- Lawyer Signup -------------------
 @app.route("/lawyer/signup", methods=["GET", "POST"])
@@ -177,18 +176,14 @@ def lawyer_login():
     return render_template("lawyer_login.html")
 
 
-
 # ------------------- Lawyer Dashboard -------------------
 @app.route("/lawyer/dashboard")
 def lawyer_dashboard():
     if "lawyer_username" not in session:
         return redirect(url_for("lawyer_login"))
-    return render_template("lawyer_dashboard.html", 
-                           lawyer_name=session["lawyer_name"], 
+    return render_template("lawyer_dashboard.html",
+                           lawyer_name=session["lawyer_name"],
                            expertise=session["lawyer_expertise"])
-
-
-
 
 
 # ------------------- Logout -------------------
@@ -197,11 +192,12 @@ def logout():
     session.clear()
     return redirect(url_for('login'))
 
-# ------------------- Chat using ML model -------------------
+
+# ------------------- Chat using ML model (with history saving) -------------------
 @app.route('/chat', methods=['POST'])
 def chat():
     if model is None or vectorizer is None or multilabel_binarizer is None or bns_collection is None:
-        return jsonify({'response': 'Error: The model or database is not configured correctly on the server.'}), 500
+        return jsonify({'response': 'Error: Model or database not configured correctly.'}), 500
 
     data = request.get_json()
     user_message = data.get('message')
@@ -210,33 +206,72 @@ def chat():
         return jsonify({'error': 'No message provided'}), 400
 
     try:
+        # ✅ Predict BNS sections
         vectorized_message = vectorizer.transform([user_message])
         predicted_binary_matrix = model.predict(vectorized_message)
         predicted_section_codes = multilabel_binarizer.inverse_transform(predicted_binary_matrix)[0]
 
         if len(predicted_section_codes) == 0:
             ai_response = "तुमच्या परिस्थितीसाठी कोणतीही विशिष्ट कायदेशीर कलम सापडली नाहीत."
+            predicted_summary = []
         else:
             predictions_html = []
-            import re
+            predicted_summary = []
+
             for sec_code in predicted_section_codes:
                 match = re.match(r'(\d+)', sec_code)
                 base_number = match.group(1) if match else sec_code
 
-                regex = f"^BNS {base_number}"  
+                regex = f"^BNS {base_number}"
                 doc = bns_collection.find_one({"section": {"$regex": regex}})
-                explanation = doc["explanation"] if doc and "explanation" in doc else "स्पष्टीकरण आढळले नाही."
-                section_display = doc["section"] if doc and "section" in doc else sec_code
+                explanation = doc.get("explanation", "स्पष्टीकरण आढळले नाही.") if doc else "स्पष्टीकरण आढळले नाही."
+                section_display = doc.get("section", sec_code) if doc else sec_code
 
                 predictions_html.append(f"<b>कलम: {section_display}</b><br>{explanation}")
+                predicted_summary.append(f"{section_display}: {explanation[:80]}...")
 
             ai_response = "<br><br>".join(predictions_html)
+
+        # ✅ Save user query automatically to historycases
+        if 'email' in session:
+            history_cases.insert_one({
+                "email": session['email'],
+                "query": user_message,
+                "predicted_sections": predicted_summary,
+                "response": ai_response,
+                "timestamp": datetime.now()
+            })
 
     except Exception as e:
         print(f"An error occurred during prediction: {e}")
         ai_response = "क्षमस्व, तुमच्या विनंतीवर प्रक्रिया करताना एक त्रुटी आली."
 
     return jsonify({'response': ai_response})
+
+
+# ------------------- Fetch user case history -------------------
+@app.route('/history', methods=['GET'])
+def history():
+    if 'email' not in session:
+        return jsonify({'history': []})
+
+    user_email = session['email']
+    cases = list(history_cases.find({"email": user_email}).sort("timestamp", -1))
+
+    for c in cases:
+        c['_id'] = str(c['_id'])
+        c['timestamp'] = c['timestamp'].strftime("%Y-%m-%d %H:%M:%S")
+
+    # Return in the same format JS expects
+    history_data = []
+    for c in cases:
+        history_data.append({
+            'query': c.get('query', 'N/A'),
+            'response': c.get('response', 'N/A'),
+            'timestamp': c['timestamp']
+        })
+
+    return jsonify({'history': history_data})
 
 
 # ------------------- File Upload -------------------
@@ -261,6 +296,7 @@ def upload_files():
 
     print(f"Uploaded {len(saved_files)} files.")
     return redirect(url_for('main'))
+
 
 # ------------------- Run Flask -------------------
 if __name__ == "__main__":

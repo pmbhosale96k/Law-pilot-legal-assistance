@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,27 +8,32 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
-    
+
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
+
 <body class="dashboard-body">
+
+    <!-- HEADER -->
     <header class="dashboard-header">
         <div class="header-left">
-            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}" alt="LawPilot Logo" class="header-logo">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
+                alt="LawPilot Logo" class="header-logo">
             <span class="header-app-name">
                 LawPilot <span class="header-slogan">AI-Driven Legal Assistant</span>
             </span>
         </div>
-        
         <div class="header-right">
             <span class="user-info">
-                <i class="fas fa-user"></i> 
-                {{ user_name }} ({{ user_type | capitalize }})
+                <i class="fas fa-user"></i>
+                
+                {{ user_name or "User" }} ({{ user_type | capitalize or "User" }})
             </span>
+
             <form action="/logout" method="POST" style="display:inline;">
                 <button type="submit" class="logout-button">
                     <i class="fas fa-sign-out-alt"></i> Logout
@@ -36,7 +42,9 @@
         </div>
     </header>
 
+    <!-- MAIN CONTENT -->
     <div class="dashboard-main-content">
+
         <!-- LEFT SIDEBAR -->
         <aside class="dashboard-sidebar">
             <nav class="sidebar-nav">
@@ -60,9 +68,10 @@
             </div>
         </aside>
 
-        <!-- MAIN CONTENT -->
+        <!-- CONTENT SECTIONS -->
         <div class="main-content-wrapper">
-            <!-- AI Assistant -->
+
+            <!-- AI ASSISTANT -->
             <main id="aiAssistantSection" class="dashboard-chat-area main-content-section active">
                 <div class="chat-header">
                     <i class="fas fa-robot chat-icon"></i>
@@ -74,7 +83,7 @@
 
                 <div class="chat-messages" id="chatMessages">
                     <div class="chat-bubble ai-message">
-                        "नमस्कार {{ user_name }}! मी लॉ पायलट आहे, तुमची एआय-आधारित कायदेशीर सहाय्यक. 
+                        "नमस्कार {{ user_name }}! मी लॉ पायलट आहे, तुमची एआय-आधारित कायदेशीर सहाय्यक.
                         तुमच्या कायदेशीर प्रश्नांमध्ये मी आज तुम्हाला कशी मदत करू शकेन?"
                         <span class="message-timestamp">{{ current_time }}</span>
                     </div>
@@ -106,15 +115,14 @@
                 <div class="card full-width-card">
                     <h3><i class="fas fa-file-alt"></i> My Cases</h3>
                     <p>Manage your ongoing and past legal cases here.</p>
-                    <ul class="case-list-placeholder">
-                        {% if cases %}
-                            {% for case in cases %}
-                                <li><strong>Case #{{ case.id }}:</strong> {{ case.title }} - {{ case.status }}</li>
-                            {% endfor %}
-                        {% else %}
-                            <li>No cases found</li>
-                        {% endif %}
-                    </ul>
+
+                    <button id="showCasesBtn" class="setting-button" style="margin-bottom:10px;">
+                        <i class="fas fa-history"></i> Show My Cases
+                    </button>
+
+                    <div id="casesContainer" class="case-list" style="max-height:400px; overflow-y:auto;">
+                        <p class="placeholder-text">Click “Show My Cases” to view your query history.</p>
+                    </div>
                 </div>
             </section>
 
@@ -142,21 +150,12 @@
         <aside class="dashboard-right-sidebar">
             <div class="quick-stats-card card">
                 <h3><i class="fas fa-bolt"></i> Quick Stats</h3>
-                <div class="stat-item">
-                    <span>Available Lawyers</span>
-                    <strong>{{ available_lawyers }}</strong>
-                </div>
-                <div class="stat-item">
-                    <span>Practice Areas</span>
-                    <strong>{{ practice_areas }}</strong>
-                </div>
-                <div class="stat-item">
-                    <span>Average Rating</span>
-                    <strong>{{ avg_rating }}<i class="fas fa-star star-icon"></i></strong>
-                </div>
+                <div class="stat-item"><span>Available Lawyers</span><strong>{{ available_lawyers }}</strong></div>
+                <div class="stat-item"><span>Practice Areas</span><strong>{{ practice_areas }}</strong></div>
+                <div class="stat-item"><span>Average Rating</span><strong>{{ avg_rating }}<i
+                            class="fas fa-star star-icon"></i></strong></div>
             </div>
 
-            <!-- Top Lawyers Section -->
             <div class="top-lawyers-card card">
                 <h3><i class="fas fa-users"></i> Top Lawyers</h3>
                 <ul class="lawyer-list">
@@ -169,7 +168,7 @@
                         </div>
                         <div class="lawyer-rating">
                             <span>{{ lawyer.rating }}<i class="fas fa-star star-icon"></i></span>
-                            <span class="lawyer-cases">{{ lawyer.cases }} cases</span>
+                            <span>{{ lawyer.cases }} cases</span>
                         </div>
                     </li>
                     {% endfor %}
@@ -181,4 +180,5 @@
     <!-- JS -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 </body>
+
 </html>

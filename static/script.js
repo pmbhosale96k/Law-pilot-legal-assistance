@@ -21,38 +21,35 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     });
 
-    
-
-
     /* -------------------- LOGIN PAGE LOGIC -------------------- */
     document.addEventListener("DOMContentLoaded", () => {
-    const loginForm = document.getElementById("loginForm");
-    loginForm.addEventListener("submit", async (e) => {
-        e.preventDefault();
-        const username = document.getElementById("username").value;
-        const password = document.getElementById("password").value;
+        const loginForm = document.getElementById("loginForm");
+        if (loginForm) {
+            loginForm.addEventListener("submit", async (e) => {
+                e.preventDefault();
+                const username = document.getElementById("username").value;
+                const password = document.getElementById("password").value;
 
-        // Choose API route based on accountType
-        const route = accountType === "lawyer" ? "/lawyer/login" : "/login";
-        console.log("Submitting to:", route);
+                const route = accountType === "lawyer" ? "/lawyer/login" : "/login";
+                console.log("Submitting to:", route);
 
-        const response = await fetch(route, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ username, password })
-        });
+                const response = await fetch(route, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
 
-        const result = await response.json();
-        console.log("Response:", result);
+                const result = await response.json();
+                console.log("Response:", result);
 
-        if (result.status === "success") {
-            window.location.href = result.redirect;
-        } else {
-            document.getElementById("loginMessage").innerText = result.message;
+                if (result.status === "success") {
+                    window.location.href = result.redirect;
+                } else {
+                    document.getElementById("loginMessage").innerText = result.message;
+                }
+            });
         }
     });
-});
-
 
     /* -------------------- SIGNUP PAGE LOGIC -------------------- */
     const signupForm = document.getElementById('signupForm');
@@ -101,12 +98,6 @@ document.addEventListener('DOMContentLoaded', () => {
     /* -------------------- DASHBOARD PAGE LOGIC -------------------- */
     const dashboardBody = document.querySelector('.dashboard-body');
     if (dashboardBody) {
-
-        // Redirect to login if not logged in (client-side check only)
-        // if (sessionStorage.getItem('isLoggedIn') !== 'true') {
-        //     window.location.href = '/login';
-        //     return;
-        // }
 
         // DARK MODE
         if (localStorage.getItem('theme') === 'dark') {
@@ -177,6 +168,41 @@ document.addEventListener('DOMContentLoaded', () => {
             chatTextarea.addEventListener('input', () => {
                 chatTextarea.style.height = 'auto';
                 chatTextarea.style.height = chatTextarea.scrollHeight + 'px';
+            });
+        }
+
+        /* ----- Show My Cases Button ----- */
+        const showCasesBtn = document.getElementById('showCasesBtn');
+        const casesContainer = document.getElementById('casesContainer');
+
+        if (showCasesBtn && casesContainer) {
+            showCasesBtn.addEventListener('click', async () => {
+                casesContainer.innerHTML = '<p>Loading your cases...</p>';
+
+                try {
+                    const res = await fetch('/history'); // Ensure backend returns JSON { history: [...] }
+                    const data = await res.json();
+
+                    if (!data.history || data.history.length === 0) {
+                        casesContainer.innerHTML = '<p>No cases found.</p>';
+                        return;
+                    }
+
+                    casesContainer.innerHTML = data.history.map((item, i) => `
+                        <div class="case-item">
+                            <p><b>Query ${i + 1}:</b> ${item.query}</p>
+                            <p><b>Response:</b> ${item.response}</p>
+                            <p class="timestamp">${new Date(item.timestamp).toLocaleString()}</p>
+                            <hr>
+                        </div>
+                    `).join('');
+
+                    casesContainer.scrollTop = casesContainer.scrollHeight;
+
+                } catch (err) {
+                    console.error('Error fetching cases:', err);
+                    casesContainer.innerHTML = '<p>Error loading cases. Please try again later.</p>';
+                }
             });
         }
 

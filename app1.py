@@ -1,24 +1,31 @@
-# --- ML & DB IMPORTS ---
-import pickle
-import numpy as np
-from pymongo import MongoClient
 import os
-import jwt
-
-# --- FLASK IMPORTS ---
-from flask import Flask, render_template, request, redirect, url_for, jsonify
-
+import pickle
+from flask import Flask, render_template, request, redirect, url_for, session, jsonify
+from flask_cors import CORS
+from pymongo import MongoClient
+from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
+from dotenv import load_dotenv
 
-# --- Flask App Setup ---
+# ------------------- Load environment variables -------------------
+load_dotenv()
+
+# ------------------- Flask app setup -------------------
 app = Flask(__name__)
-app.secret_key = "abc"
+app.secret_key = os.getenv("FLASK_SECRET_KEY", "defaultsecret")
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
 
-# --- Load Model and Connect to MongoDB ---
+# Optional: cookie settings
+# Ensure cookies work locally
+app.config['SESSION_COOKIE_NAME'] = 'lawpilot_session'
+app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
+app.config['SESSION_COOKIE_SECURE'] = False  # True only if using HTTPS
+
+CORS(app)
+
+# ------------------- Load ML model & connect MongoDB -------------------
 try:
-    # Load ML model files
     with open("multilabel_model.pkl", "rb") as f:
         model = pickle.load(f)
     with open("vectorizer.pkl", "rb") as f:
@@ -26,63 +33,174 @@ try:
     with open("multilabel_binarizer.pkl", "rb") as f:
         multilabel_binarizer = pickle.load(f)
 
-    # MongoDB connection
-    client = MongoClient("mongodb://localhost:27017/")
+    client = MongoClient(os.getenv("MONGO_URI", "mongodb://localhost:27017/"))
     db = client["lawpilot"]
-    collection = db["bnssections"]
+    users_collection = db["users"]
+    # \aefwefwe ............
+    lawyers_collection = db["lawyers"]     
+    bns_collection = db["bnssections"]
 
-    # Check DB connection
-    client.admin.command('ping')
+    client.admin.command("ping")
     print("✅ Model and MongoDB connected successfully!")
 
 except Exception as e:
     print(f"❌ Error loading models or connecting to MongoDB: {e}")
-    model = vectorizer = multilabel_binarizer = collection = None
+    model = vectorizer = multilabel_binarizer = None
+    users_collection = bns_collection = None
 
-
-# --- Routes ---
-
+# ------------------- Routes -------------------
 @app.route('/')
 def main():
-    """Landing page that shows dashboard."""
-    return render_template('dashboard.html')
+    print("SESSION at / :", dict(session))
+    if 'username' not in session:
+        print("No session, redirecting to login")
+        return redirect(url_for('login'))
+    print("Session found, rendering dashboard for:", session['username'])
+    return render_template('dashboard.html', username=session['username'])
 
 
-# --- LOGIN ROUTE (Supports POST) ---
-@app.route('/login', methods=["GET", "POST"])
-def login():
-    if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
 
-        # ✅ Replace this with real DB check later
-        if username == "admin" and password == "1234":
-            session['username'] = username    # <-- save username in session
-            session['user_type'] = 'user'     # optional: save type/role
-            return redirect(url_for("main"))
-        else:
-            return render_template('indexpy.html', error="Invalid username or password")
-
-    return render_template('indexpy.html')
-
-
-# --- SIGNUP ROUTE (Supports POST) ---
+# ------------------- Signup for Users -------------------
 @app.route('/signup', methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
+        fullname = request.form.get("fullname")
+        email = request.form.get("email")
+        password = request.form.get("password")
+
+        if not fullname or not email or not password:
+            return render_template('signuppy.html', error="Please fill in all fields")
+
+        if users_collection.find_one({"email": email}):
+            return render_template('signuppy.html', error="Email already registered")
+
+        hashed_password = generate_password_hash(password)
+        users_collection.insert_one({
+            "fullname": fullname,
+            "email": email,
+            "password": hashed_password
+        })
+
+        return redirect(url_for('login'))
+
+    return render_template('signuppy.html')
+
+# ------------------- Login for Users  -------------------
+@app.route('/login', methods=["GET", "POST"])
+def login():
+    print("Login accessed. Method:", request.method)
+    
+    if request.method == "POST":
+        email = request.form.get("email")
+        password = request.form.get("password")
+        print("POST Data:", email, password)
+
+        if not email or not password:
+            return render_template('indexpy.html', error="Please enter email and password")
+
+        user = users_collection.find_one({"email": email})
+        print("User from DB:", user)
+
+        if not user:
+            return render_template('indexpy.html', error="Email does not exist")
+
+        if not check_password_hash(user["password"], password):
+            return render_template('indexpy.html', error="Incorrect password")
+
+        # Corrected session
+        session.clear()  
+        session['username'] = user["fullname"]
+        session['email'] = user["email"]  # keep only this
+
+        print("Session after login:", dict(session))
+        return redirect(url_for('main'))
+
+    return render_template('indexpy.html')
+
+# ------------------- Lawyer Signup -------------------
+@app.route("/lawyer/signup", methods=["GET", "POST"])
+def lawyer_signup():
+    if request.method == "POST":
+        name = request.form.get("name")
+        username = request.form.get("username")
+        password = request.form.get("password")
+        confirm_password = request.form.get("confirm_password")
+        expertise = request.form.get("expertise")
+
+        if not name or not username or not password or not confirm_password or not expertise:
+            return render_template("lawyer_signup.html", error="Please fill in all fields")
+
+        if password != confirm_password:
+            return render_template("lawyer_signup.html", error="Passwords do not match")
+
+        if lawyers_collection.find_one({"username": username}):
+            return render_template("lawyer_signup.html", error="Username already exists")
+
+        hashed_password = generate_password_hash(password)
+
+        lawyers_collection.insert_one({
+            "name": name,
+            "username": username,
+            "password": hashed_password,
+            "expertise": expertise
+        })
+
+        return redirect(url_for("lawyer_login"))
+
+    return render_template("lawyer_signup.html")
+
+
+# ------------------- Lawyer Login -------------------
+@app.route("/lawyer/login", methods=["GET", "POST"])
+def lawyer_login():
+    if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
 
-        # ✅ Just redirect to login after signup for now
-        return redirect(url_for("login"))
+        if not username or not password:
+            return render_template("lawyer_login.html", error="Please enter username and password")
 
-    return render_template('signuppy.html')  # <-- using signuppy.html
+        lawyer = lawyers_collection.find_one({"username": username})
+        if not lawyer:
+            return render_template("lawyer_login.html", error="Username does not exist")
+
+        if not check_password_hash(lawyer["password"], password):
+            return render_template("lawyer_login.html", error="Incorrect password")
+
+        session.clear()
+        session["lawyer_username"] = lawyer["username"]
+        session["lawyer_name"] = lawyer["name"]
+        session["lawyer_expertise"] = lawyer["expertise"]
+
+        return redirect(url_for("lawyer_dashboard"))
+
+    return render_template("lawyer_login.html")
 
 
-# --- CHAT ROUTE ---
+
+# ------------------- Lawyer Dashboard -------------------
+@app.route("/lawyer/dashboard")
+def lawyer_dashboard():
+    if "lawyer_username" not in session:
+        return redirect(url_for("lawyer_login"))
+    return render_template("lawyer_dashboard.html", 
+                           lawyer_name=session["lawyer_name"], 
+                           expertise=session["lawyer_expertise"])
+
+
+
+
+
+# ------------------- Logout -------------------
+@app.route('/logout', methods=["POST"])
+def logout():
+    session.clear()
+    return redirect(url_for('login'))
+
+# ------------------- Chat using ML model -------------------
 @app.route('/chat', methods=['POST'])
 def chat():
-    if model is None or vectorizer is None or multilabel_binarizer is None or collection is None:
+    if model is None or vectorizer is None or multilabel_binarizer is None or bns_collection is None:
         return jsonify({'response': 'Error: The model or database is not configured correctly on the server.'}), 500
 
     data = request.get_json()
@@ -102,14 +220,11 @@ def chat():
             predictions_html = []
             import re
             for sec_code in predicted_section_codes:
-                # Extract only the starting digits, ignore any parentheses
                 match = re.match(r'(\d+)', sec_code)
                 base_number = match.group(1) if match else sec_code
 
-                # Match any section that starts with this number
                 regex = f"^BNS {base_number}"  
-
-                doc = collection.find_one({"section": {"$regex": regex}})
+                doc = bns_collection.find_one({"section": {"$regex": regex}})
                 explanation = doc["explanation"] if doc and "explanation" in doc else "स्पष्टीकरण आढळले नाही."
                 section_display = doc["section"] if doc and "section" in doc else sec_code
 
@@ -124,46 +239,30 @@ def chat():
     return jsonify({'response': ai_response})
 
 
-
-# --- FILE UPLOAD ROUTE ---
-@app.route('/upload', methods=['POST'])
+# ------------------- File Upload -------------------
+@app.route('/upload', methods=["POST"])
 def upload_files():
-    """Handles file uploads."""
     if 'files' not in request.files:
         return redirect(request.url)
 
     files = request.files.getlist('files')
-
     if not files or files[0].filename == '':
         return redirect(request.url)
 
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'pdf', 'docx'}
-
-    def allowed_file(filename):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
-
     saved_files = []
+
     for file in files:
-        if file and allowed_file(file.filename):
+        if '.' in file.filename and file.filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
             filename = secure_filename(file.filename)
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(filepath)
             saved_files.append(filename)
 
-    print(f"Uploaded {len(saved_files)} files successfully.")
+    print(f"Uploaded {len(saved_files)} files.")
     return redirect(url_for('main'))
 
-@app.route('/logout', methods=['POST'])
-def logout():
-    """
-    Logs the user out by clearing the session and redirecting to login page.
-    """
-    from flask import session
-    session.clear()                     # Clear all session data
-    return redirect(url_for('login'))
-
-
-# --- Run Flask App ---
-if __name__ == '__main__':
+# ------------------- Run Flask -------------------
+if __name__ == "__main__":
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True)
