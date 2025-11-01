@@ -109,7 +109,6 @@ def signup():
 
 
 # ------------------- Login for Users -------------------
-# ------------------- Login for Users -------------------
 @app.route('/login', methods=["GET", "POST"])
 def login():
     if request.method == "POST":
