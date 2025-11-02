@@ -1,29 +1,35 @@
-// ---------------------- Global Functions ----------------------
+// ====================== GLOBAL FUNCTIONS ======================
 
 // Redirect based on account type (login/signup)
 function goToLogin(type) {
-    if (type === 'lawyer') {
-        window.location.href = '/lawyer/login';
-    } else {
-        window.location.href = '/login';
-    }
+    // Consolidated logic for clarity
+    window.location.href = type === 'lawyer' ? '/lawyer/login' : '/login';
 }
 
-// ---------------------- Lawyer Directory ----------------------
+// ====================== LAWYER DIRECTORY ======================
 
 async function fetchAndRenderLawyers(query = "") {
     const tableBody = document.getElementById('lawyerTableBody');
     const statusMessage = document.getElementById('lawyerStatusMessage');
+    const staticPlaceholder = document.getElementById('staticLawyerPlaceholder'); // Target the static HTML placeholder
 
+    if (!tableBody || !statusMessage) return;
+
+    // 1. Hide the static placeholder immediately (Fixes the visible conflict)
+    if (staticPlaceholder) staticPlaceholder.style.display = 'none';
+
+    // 2. Clear previous table content and set loading message
     tableBody.innerHTML = '';
-    statusMessage.textContent = query ? `Searching for "${query}"...` : 'Loading all available lawyers...';
+    statusMessage.textContent = query
+        ? `Searching for "${query}"...`
+        : 'Loading all available lawyers...';
 
     try {
         const response = await fetch(`/api/lawyers?query=${encodeURIComponent(query)}`);
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
 
         const data = await response.json();
-        const lawyers = data.lawyers;
+        const lawyers = data.lawyers || [];
 
         if (!lawyers.length) {
             statusMessage.textContent = `No lawyers found matching "${query || 'your criteria'}" in the database.`;
@@ -34,11 +40,21 @@ async function fetchAndRenderLawyers(query = "") {
             const row = tableBody.insertRow();
             row.insertCell().textContent = lawyer.name;
             row.insertCell().textContent = lawyer.expertise;
+            
+            // NOTE: The 'email' field is crucial here for the 'Action' link.
             const actionCell = row.insertCell();
-            actionCell.innerHTML = `<button class="contact-button"><i class="fas fa-handshake"></i> Connect</button>`;
+            
+            // 💡 CURRENT IMPLEMENTATION: Connect button placeholder
+            actionCell.innerHTML = `
+                <button class="contact-button" data-email="${lawyer.email}">
+                    <i class="fas fa-handshake"></i> Connect
+                </button>`;
         });
 
         statusMessage.textContent = `${lawyers.length} lawyer(s) found.`;
+        
+        // After rendering, initialize the 'Connect' buttons (ready for the next step)
+        initializeConnectButtons(); 
 
     } catch (err) {
         console.error('Error fetching lawyers:', err);
@@ -51,11 +67,27 @@ function searchLawyers() {
     if (searchInput) fetchAndRenderLawyers(searchInput.value);
 }
 
-// ---------------------- Document Ready ----------------------
+
+function initializeConnectButtons() {
+    // This function will be completed in the next step to add email functionality
+    // Currently, it's just a placeholder to ensure the buttons are ready.
+    const connectButtons = document.querySelectorAll('.contact-button');
+    connectButtons.forEach(button => {
+        const email = button.dataset.email;
+        if (email) {
+            button.addEventListener('click', () => {
+                window.location.href = `mailto:${email}?subject=Legal%20Inquiry%20from%20LawPilot%20User&body=Dear%20${email},%0A%0AI%20am%20a%20LawPilot%20user%20and%20would%20like%20to%20consult%20you%20regarding%20a%20case%20in%20your%20area%20of%20expertise.%0A%0A[Please%20insert%20your%20query%20here]`;
+            });
+        }
+    });
+}
+
+
+// ====================== DOCUMENT READY ======================
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // ---------- Login/Signup Page ----------
+    // ---------- LOGIN/SIGNUP PAGE ----------
     const toggleButtons = document.querySelectorAll('.toggle-button');
     const loginForm = document.getElementById("loginForm");
 
@@ -67,32 +99,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 const accountType = btn.dataset.type;
                 loginForm.action = accountType === 'lawyer' ? '/lawyer/login' : '/login';
-                console.log(`Form action set to: ${loginForm.action}`);
             });
         });
     }
 
-    // ---------- Dashboard Page ----------
+    // ---------- DASHBOARD PAGE ----------
     const dashboardBody = document.querySelector('.dashboard-body');
     if (!dashboardBody) return;
 
-    // Dark mode
-    // DARK MODE TOGGLE
-const darkModeToggle = document.getElementById('darkModeToggle');
-if (darkModeToggle) {
-    darkModeToggle.addEventListener('change', () => {
-        if (darkModeToggle.checked) {
-            document.body.classList.add('dark-mode');
-            localStorage.setItem('theme', 'dark');
-        } else {
-            document.body.classList.remove('dark-mode');
-            localStorage.setItem('theme', 'light');
-        }
-    });
-}
+    // ========== DARK MODE ==========
+    const darkModeToggle = document.getElementById('darkModeToggle');
 
+    // Apply saved theme
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'dark') {
+        document.body.classList.add('dark-mode');
+        if (darkModeToggle) darkModeToggle.checked = true;
+    }
 
-    // Logout
+    if (darkModeToggle) {
+        darkModeToggle.addEventListener('change', () => {
+            const isDark = darkModeToggle.checked;
+            document.body.classList.toggle('dark-mode', isDark);
+            localStorage.setItem('theme', isDark ? 'dark' : 'light');
+        });
+    }
+
+    // ========== LOGOUT ==========
     const logoutButton = document.querySelector('.logout-button');
     if (logoutButton) {
         logoutButton.addEventListener('click', () => {
@@ -100,7 +133,7 @@ if (darkModeToggle) {
         });
     }
 
-    // ---------- Chat ----------
+    // ========== CHAT SYSTEM ==========
     const chatMessagesContainer = document.getElementById('chatMessages');
     const chatTextarea = document.querySelector('.chat-textarea');
     const chatSendButton = document.querySelector('.chat-send-button');
@@ -153,7 +186,7 @@ if (darkModeToggle) {
         });
     }
 
-    // ---------- Sidebar Navigation ----------
+    // ========== SIDEBAR NAVIGATION ==========
     const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
     const contentSections = document.querySelectorAll('.main-content-section');
     const findLawyerInput = document.getElementById('lawyerSearchInput');
@@ -163,6 +196,7 @@ if (darkModeToggle) {
             e.preventDefault();
             const targetId = item.dataset.target;
 
+            // Reset active states
             navItems.forEach(n => n.classList.remove('active'));
             contentSections.forEach(sec => {
                 sec.classList.remove('active');
@@ -170,12 +204,13 @@ if (darkModeToggle) {
             });
 
             item.classList.add('active');
-            const targetSection = document.getElementById(targetId);
-            if (targetSection) {
-                targetSection.classList.add('active');
-                targetSection.classList.remove('hidden');
+            const section = document.getElementById(targetId);
+            if (section) {
+                section.classList.add('active');
+                section.classList.remove('hidden');
             }
 
+            // Load Lawyer Directory dynamically
             if (targetId === 'findLawyerSection') {
                 if (findLawyerInput) findLawyerInput.value = '';
                 fetchAndRenderLawyers("");
@@ -188,6 +223,37 @@ if (darkModeToggle) {
             if (e.key === 'Enter') {
                 e.preventDefault();
                 searchLawyers();
+            }
+        });
+    }
+    
+    // ========== MY CASES SECTION ==========
+    const showCasesBtn = document.getElementById("showCasesBtn");
+    const casesContainer = document.getElementById("casesContainer");
+
+    if (showCasesBtn && casesContainer) {
+        showCasesBtn.addEventListener("click", async () => {
+            casesContainer.innerHTML = "<p class='loading-text'>Loading your cases...</p>";
+
+            try {
+                const res = await fetch("/history");
+                const data = await res.json();
+
+                if (!data.history || data.history.length === 0) {
+                    casesContainer.innerHTML = "<p class='no-cases-text'>No case history found.</p>";
+                    return;
+                }
+
+                casesContainer.innerHTML = data.history.map(c => `
+                    <div class="case-card">
+                        <p class="case-time">🕒 ${c.timestamp}</p>
+                        <p><strong>प्रश्न:</strong> ${c.query}</p>
+                        <div class="case-response">${c.response}</div>
+                    </div>
+                `).join("");
+            } catch (err) {
+                console.error("Error loading cases:", err);
+                casesContainer.innerHTML = "<p class='error-text'>⚠ Failed to load history.</p>";
             }
         });
     }

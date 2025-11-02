@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Find a Lawyer</title>
+    <style>
+        .lawyer-card {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .lawyer-card h3 {
+            margin-top: 0;
+            color: #007bff;
+        }
+        .no-lawyers {
+            color: gray;
+        }
+    </style>
+</head>
+<body>
+    <h2>Find Qualified Lawyers</h2>
+
+    {% if lawyers %}
+        {% for lawyer in lawyers %}
+            <div class="lawyer-card">
+                <h3>{{ lawyer.name }}</h3> 
+                
+                <p><strong>Expertise:</strong> {{ lawyer.expertise }}</p>
+                
+                <p><strong>Contact:</strong> <a href="mailto:{{ lawyer.email }}">{{ lawyer.email }}</a></p>
+            </div>
+        {% endfor %}
+    {% else %}
+        <p class="no-lawyers">No lawyers found in the directory yet.</p>
+    {% endif %}
+
+    <p><a href="{{ url_for('main') }}">Go back to Dashboard</a></p>
+
+</body>
+</html>

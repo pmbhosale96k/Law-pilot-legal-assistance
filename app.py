@@ -13,7 +13,7 @@ import re
 load_dotenv()
 
 # ------------------- Flask app setup -------------------
-app = Flask(__name__)
+app = Flask("_name_")
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "defaultsecret")
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
@@ -207,6 +207,58 @@ def lawyer_dashboard():
                            expertise=session["lawyer_expertise"])
 
 
+
+
+
+# ------------------- Find Lawyers -------------------
+# ------------------- Find Lawyers -------------------
+@app.route('/find-lawyer')
+def find_lawyer():
+    if 'username' not in session:
+        return redirect(url_for('login'))
+
+    lawyers = []
+    try:
+        # Fetches name, expertise, and email for display
+        lawyers = list(lawyers_collection.find({}, {"_id": 0, "name": 1, "expertise": 1, "email": 1}))
+        print(f"✅ Found {len(lawyers)} lawyers.") # This line confirms the fetch in your console
+    except Exception as e:
+        print(f"❌ Error fetching lawyers: {e}")
+
+    return render_template('find_lawyer.html', lawyers=lawyers) # Passes the list to the template
+
+# ------------------- API to Fetch Lawyers (for JS/Search) -------------------
+@app.route('/api/lawyers', methods=['GET'])
+def api_get_lawyers():
+    # Check for login status (optional but recommended for an API)
+    if 'username' not in session:
+        return jsonify({"error": "Unauthorized"}), 401
+
+    search_query = request.args.get('query', '').strip()
+    
+    # Base query
+    mongo_query = {} 
+
+    if search_query:
+        # Create a case-insensitive regex for searching name OR expertise
+        regex = re.compile(re.escape(search_query), re.IGNORECASE)
+        mongo_query = {
+            "$or": [
+                {"name": {"$regex": regex}},
+                {"expertise": {"$regex": regex}}
+            ]
+        }
+    
+    lawyers = []
+    try:
+        # Fetch only necessary fields: name, expertise, email (excluding _id)
+        lawyers = list(lawyers_collection.find(mongo_query, {"_id": 0, "name": 1, "expertise": 1, "email": 1}))
+    except Exception as e:
+        print(f"❌ Error fetching lawyers from API: {e}")
+        return jsonify({"error": "Database error"}), 500
+
+    # Return the list of lawyers as JSON
+    return jsonify({"lawyers": lawyers})
 # ------------------- Logout -------------------
 @app.route('/logout', methods=["POST"])
 def logout():
@@ -320,6 +372,6 @@ def upload_files():
 
 
 # ------------------- Run Flask -------------------
-if __name__ == "__main__":
+if __name__ == '__main__':
     os.makedirs(app.config['UPLOAD_FOLDER'], exist_ok=True)
     app.run(debug=True)
