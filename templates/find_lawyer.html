@@ -4,31 +4,101 @@
     <meta charset="UTF-8">
     <title>Find a Lawyer</title>
     <style>
-        .lawyer-card {
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f7f8fa;
+        }
+
+        h2 {
+            color: #333;
+            text-align: center;
+        }
+
+        .search-box {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        input[type="text"] {
+            padding: 8px;
+            width: 50%;
             border: 1px solid #ccc;
-            padding: 15px;
-            margin-bottom: 10px;
             border-radius: 5px;
         }
+
+        button {
+            padding: 8px 12px;
+            margin-left: 8px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        .lawyer-card {
+            border: 1px solid #ccc;
+            background-color: #fff;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
         .lawyer-card h3 {
             margin-top: 0;
             color: #007bff;
         }
+
+        .lawyer-card p {
+            margin: 5px 0;
+        }
+
         .no-lawyers {
             color: gray;
+            text-align: center;
+        }
+
+        .back-link {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .back-link a {
+            text-decoration: none;
+            color: #007bff;
+            font-weight: bold;
+        }
+
+        .back-link a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
     <h2>Find Qualified Lawyers</h2>
 
+    <!-- Search Functionality -->
+    <div class="search-box">
+        <form method="GET" action="{{ url_for('find_lawyer') }}">
+            <input type="text" name="query" placeholder="Search by name or expertise..." value="{{ request.args.get('query', '') }}">
+            <button type="submit">Search</button>
+        </form>
+    </div>
+
+    <!-- Lawyer Listing -->
     {% if lawyers %}
         {% for lawyer in lawyers %}
             <div class="lawyer-card">
-                <h3>{{ lawyer.name }}</h3> 
-                
+                <h3>{{ lawyer.name }}</h3>
                 <p><strong>Expertise:</strong> {{ lawyer.expertise }}</p>
-                
+                <p><strong>Experience:</strong> {{ lawyer.experience }} years</p>
+                <p><strong>Rating:</strong> ⭐ {{ lawyer.rating }}/5</p>
                 <p><strong>Contact:</strong> <a href="mailto:{{ lawyer.email }}">{{ lawyer.email }}</a></p>
             </div>
         {% endfor %}
@@ -36,7 +106,8 @@
         <p class="no-lawyers">No lawyers found in the directory yet.</p>
     {% endif %}
 
-    <p><a href="{{ url_for('main') }}">Go back to Dashboard</a></p>
-
+    <div class="back-link">
+        <p><a href="{{ url_for('main') }}">← Go back to Dashboard</a></p>
+    </div>
 </body>
 </html>

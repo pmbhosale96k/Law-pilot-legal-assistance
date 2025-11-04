@@ -349,77 +349,178 @@ body.dark-mode .toggle-button {
 
 /* Light Mode Styles */
 .show-cases-btn {
-  background-color: #d4b27c; 
-  color: #1a2b42;
-  border: none;
-  border-radius: 9999px; 
-  padding: 12px 25px; 
-  font-size: 0.95em;
-  font-weight: 700;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 15px rgba(212, 178, 124, 0.4); 
+    background-color: #d4b27c; 
+    color: #1a2b42;
+    border: none;
+    border-radius: 9999px; 
+    padding: 12px 25px; 
+    font-size: 0.95em;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(212, 178, 124, 0.4); 
 }
 
 .show-cases-btn:hover {
-  background-color: #c8a36a;
-  box-shadow: 0 6px 20px rgba(212, 178, 124, 0.6);
-  transform: translateY(-2px);
+    background-color: #c8a36a;
+    box-shadow: 0 6px 20px rgba(212, 178, 124, 0.6);
+    transform: translateY(-2px);
 }
 
 .cases-container {
-  margin-top: 1.5rem;
-  background-color: #ffffff; 
-  padding: 20px; 
-  border-radius: 16px; 
-  border: 1px solid #f0f0f0;
-  max-height: 400px;
-  overflow-y: scroll; /* Changed to scroll for consistent scrollbar-hiding */
-  box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08); 
-  scrollbar-width: none; /* Firefox */
+    margin-top: 1.5rem;
+    background-color: #ffffff; 
+    padding: 20px; 
+    border-radius: 16px; 
+    border: 1px solid #f0f0f0;
+    max-height: 400px;
+    overflow-y: scroll; 
+    box-shadow: 0 5px 25px rgba(0, 0, 0, 0.08); 
+    scrollbar-width: none; /* Firefox */
 }
 .cases-container::-webkit-scrollbar { display: none; } /* Chrome, Safari */
 
 .case-card {
-  background: #f8f9fa;
-  border-left: 6px solid #d4b27c; 
-  color: #333333; 
-  padding: 15px;
-  border-radius: 10px;
-  margin-bottom: 15px;
-  box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); 
-  transition: transform 0.2s;
+    background: #f8f9fa;
+    border-left: 6px solid #d4b27c; 
+    color: #333333; 
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 15px;
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.05); 
+    transition: transform 0.2s;
 }
 
 .case-card:hover { transform: translateY(-1px); box-shadow: 0 3px 8px rgba(0, 0, 0, 0.1); }
 
+.case-card p {
+    color: var(--secondary-text-color);
+}
 .case-time { font-size: 0.8em; color: #9ca3af; margin-bottom: 8px; font-weight: 500; display: block; }
 
 .case-query { font-weight: 600; color: #4a4a4a; margin-bottom: 5px; }
 
 .case-response {
-  background-color: #ffffff; 
-  border: 1px dashed #e0e0e0; 
-  padding: 10px;
-  border-radius: 8px;
-  margin-top: 10px;
-  color: #555555;
-  line-height: 1.5;
-  font-size: 0.9em;
+    background-color: #ffffff; 
+    border: 1px dashed #e0e0e0; 
+    padding: 10px;
+    border-radius: 8px;
+    margin-top: 10px;
+    color: #555555;
+    line-height: 1.5;
+    font-size: 0.9em;
+}
+
+/* --- Added Case List Styling (Alternative/Dark Mode focus) --- */
+
+/* Container for the list - Overrides max-height:400px from above if needed */
+.cases-container {
+    max-height: 70vh; 
+    overflow-y: auto;
+    padding-right: 15px; 
+}
+
+/* Unordered list */
+.case-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+/* Individual Case Item */
+.case-item {
+    background-color: #2c3e50; 
+    border: 1px solid #34495e;
+    border-radius: 8px;
+    padding: 15px;
+    margin-bottom: 15px; 
+    transition: all 0.2s ease-in-out;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.case-item:hover {
+    background-color: #34495e; 
+    border-color: #1abc9c;
+}
+
+/* Header line (Case ID and Date/Time) */
+.case-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+    padding-bottom: 5px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.case-id {
+    font-weight: 700;
+    color: #f1c40f; 
+    font-size: 1.1em;
+}
+
+.case-datetime {
+    font-size: 0.85em;
+    color: #bdc3c7; 
+}
+
+/* Case Summary */
+.case-summary {
+    margin: 0 0 10px 0;
+    color: #ecf0f1; 
+    font-size: 0.95em;
+    line-height: 1.4;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2; 
+    -webkit-box-orient: vertical;
+}
+
+/* Footer line (Prediction/Status) */
+.case-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.case-prediction-label {
+    font-weight: 500;
+    color: #95a5a6;
+}
+
+/* Status/Prediction Tag */
+.case-status {
+    padding: 3px 8px;
+    border-radius: 4px;
+    font-size: 0.8em;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+/* Styling for different status types */
+.case-status-no-prediction {
+    background-color: #e67e22; /* Orange for 'No Prediction' */
+    color: #ffffff;
+}
+
+.case-status-pending {
+    background-color: #3498db; 
+    color: #ffffff;
 }
 
 /* Dark Mode Overrides for Cases */
 body.dark-mode .cases-container {
-  background-color: #1a2b42; /* Oxford Gray-Blue */
-  border: 1px solid #2f3d52;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+    background-color: #1a2b42; /* Oxford Gray-Blue */
+    border: 1px solid #2f3d52;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
 }
 
 body.dark-mode .case-card {
-  background: #24364f; 
-  border-left: 6px solid #d4b27c;
-  color: #f1f1f1;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    background: #24364f; 
+    border-left: 6px solid #d4b27c;
+    color: #f1f1f1;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
 }
 
 body.dark-mode .case-time { color: #c5c6ca; }
@@ -427,9 +528,9 @@ body.dark-mode .case-time { color: #c5c6ca; }
 body.dark-mode .case-query { color: #e0e0e0; }
 
 body.dark-mode .case-response {
-  background-color: #1f2e44; 
-  border: 1px dashed #3a4b64;
-  color: #e8e8e8;
+    background-color: #1f2e44; 
+    border: 1px dashed #3a4b64;
+    color: #e8e8e8;
 }
 
 
@@ -460,6 +561,189 @@ body.dark-mode .slider { background-color: #555; }
 input:checked + .slider { background-color: var(--primary-blue); }
 input:checked + .slider:before { transform: translateX(24px); }
 
+
+/* =====================================================
+   H. FIND LAWYER / USER REQUESTS STYLES (Table Layout)
+   ===================================================== */
+
+/* Styles for the main container (section > div.card) */
+.full-width-card {
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 4px 15px var(--shadow-color);
+    margin: 20px; /* To prevent sticking to the wrapper edges */
+    background-color: var(--card-bg);
+}
+
+.full-width-card h3 {
+    font-size: 1.6em;
+    color: var(--primary-blue);
+    margin-top: 0;
+    margin-bottom: 10px;
+    font-weight: 700;
+}
+
+.full-width-card p {
+    color: var(--secondary-text-color);
+    margin-bottom: 20px;
+}
+
+/* Search Bar Styling */
+.search-bar {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 25px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    background-color: var(--bg-color); /* Lighter background for the input area */
+    padding: 8px;
+    transition: all 0.3s ease;
+}
+
+.search-bar:focus-within {
+    border-color: var(--primary-blue);
+    box-shadow: 0 0 0 3px rgba(212, 178, 124, 0.3);
+}
+
+.search-bar input[type="text"] {
+    flex: 1;
+    padding: 10px 15px;
+    border: none;
+    background-color: transparent;
+    font-size: 1em;
+    color: var(--text-color);
+    outline: none;
+}
+
+.search-bar button {
+    padding: 10px 20px;
+    background-color: var(--primary-blue);
+    color: var(--chat-user-bubble-text);
+    border: none;
+    border-radius: 6px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+}
+
+.search-bar button:hover {
+    background-color: var(--hover-blue);
+    transform: translateY(-1px);
+}
+
+.search-bar button i {
+    margin-right: 8px;
+}
+
+/* Table Styling */
+.lawyer-table, .requests-table {
+    width: 100%;
+    border-collapse: separate; 
+    border-spacing: 0 10px; 
+    font-size: 0.95em;
+}
+
+.lawyer-table thead tr, .requests-table thead tr {
+    background-color: var(--bg-color); 
+    color: var(--secondary-text-color);
+}
+
+.lawyer-table th, .lawyer-table td, 
+.requests-table th, .requests-table td {
+    padding: 15px 20px;
+    text-align: left;
+}
+
+.lawyer-table th, .requests-table th {
+    font-weight: 600;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    color: var(--tertiary-text-color);
+    border-bottom: 2px solid var(--border-color);
+}
+
+.lawyer-table tbody tr, .requests-table tbody tr {
+    background-color: var(--main-content-bg); 
+    border-radius: 8px;
+    box-shadow: 0 1px 5px var(--shadow-color);
+    transition: background-color 0.2s ease, transform 0.1s ease;
+}
+
+.lawyer-table tbody tr:hover, .requests-table tbody tr:hover {
+    background-color: var(--chat-ai-bubble-bg); 
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Ensure borders are correctly rounded for first/last cell */
+.lawyer-table tbody tr td:first-child, .requests-table tbody tr td:first-child {
+    border-top-left-radius: 8px;
+    border-bottom-left-radius: 8px;
+    font-weight: 500;
+}
+.lawyer-table tbody tr td:last-child, .requests-table tbody tr td:last-child {
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+/* Action Button Styling (Connect/Accept/Decline) */
+.action-button {
+    padding: 8px 15px;
+    background-color: var(--primary-blue);
+    color: var(--chat-user-bubble-text);
+    border: none;
+    border-radius: 6px;
+    font-size: 0.9em;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.3s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+    margin-right: 5px; 
+}
+
+.action-button:hover {
+    background-color: var(--hover-blue);
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Specific button styles for the lawyer "User Requests" table */
+.accept-btn {
+    background-color: #28a745; /* Green for Accept */
+}
+
+.accept-btn:hover {
+    background-color: #218838;
+}
+
+.reject-btn {
+    background-color: var(--logout-red); /* Red for Decline/Reject */
+}
+
+.reject-btn:hover {
+    background-color: var(--logout-red-hover);
+}
+
+/* Placeholder for no results */
+.placeholder-text {
+    text-align: center;
+    padding: 30px;
+    color: var(--tertiary-text-color);
+    font-style: italic;
+    font-size: 1.1em;
+}
+
+/* Dark Mode Overrides for Find Lawyer/Requests */
+body.dark-mode .lawyer-table tbody tr, 
+body.dark-mode .requests-table tbody tr {
+    background-color: #2a405d; 
+    box-shadow: 0 1px 5px rgba(0, 0, 0, 0.4);
+}
+
+body.dark-mode .lawyer-table tbody tr:hover, 
+body.dark-mode .requests-table tbody tr:hover {
+    background-color: #354c6b; 
+}
 
 /* =====================================================
    G. MEDIA QUERIES (Responsiveness)
@@ -525,4 +809,31 @@ input:checked + .slider:before { transform: translateX(24px); }
     .chat-send-button { width: 40px; height: 40px; font-size: 1em; }
     .quick-stats-card, .top-lawyers-card { flex: 1 1 100%; max-width: 100%; }
     .dashboard-sidebar { padding: 15px; }
+}
+
+/* =====================================================
+   I. LAWYER SUGGESTION PANEL DARK MODE OVERRIDES
+   ===================================================== */
+
+/* Ensure the floating panel respects Dark Mode variables */
+body.dark-mode .lawyer-suggestion-panel {
+    background: var(--card-bg) !important; /* Use dark card background */
+    box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+    color: var(--text-color) !important; /* Use light text color */
+}
+
+/* Header/Divider colors */
+body.dark-mode .lawyer-suggestion-panel .panel-header {
+    border-bottom: 1px solid var(--border-color) !important;
+}
+
+/* Suggested lawyer text/detail colors */
+body.dark-mode .lawyer-suggestion-panel .small {
+    color: var(--secondary-text-color) !important;
+}
+
+/* Contact button in the panel should use theme colors */
+body.dark-mode .lawyer-suggestion-panel button.panel-contact-button {
+    background: var(--primary-blue) !important;
+    color: var(--chat-user-bubble-text) !important;
 }

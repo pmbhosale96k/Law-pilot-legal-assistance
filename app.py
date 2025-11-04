@@ -13,7 +13,7 @@ import re
 load_dotenv()
 
 # ------------------- Flask app setup -------------------
-app = Flask("_name_")
+app = Flask(__name__) # Corrected app name to __name__
 app.secret_key = os.getenv("FLASK_SECRET_KEY", "defaultsecret")
 app.config['UPLOAD_FOLDER'] = 'uploads'
 app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB limit
@@ -38,6 +38,8 @@ try:
     lawyers_collection = db["lawyers"]
     bns_collection = db["bnssections"]
     history_cases = db["historycases"]
+    # 💡 NEW COLLECTION: For lawyer connection requests
+    lawyer_requests_collection = db["lawyerrequests"] 
 
     client.admin.command("ping")
     print("✅ Model and MongoDB connected successfully!")
@@ -46,6 +48,7 @@ except Exception as e:
     print(f"❌ Error loading models or connecting to MongoDB: {e}")
     model = vectorizer = multilabel_binarizer = None
     users_collection = bns_collection = None
+    lawyer_requests_collection = None # Ensure it's set to None on failure
 
 
 # ------------------- Routes -------------------
@@ -78,7 +81,6 @@ def main():
         user_name=session.get('username', 'User'),
         user_type=session.get('user_type', 'user'),
         cases=cases,
-        
     )
 
 
@@ -129,12 +131,11 @@ def login():
         session.clear()
         session['username'] = user["fullname"]
         session['email'] = user["email"]
-        session['user_type'] = "user"   # <-- add this
+        session['user_type'] = "user"  # <-- add this
 
         return redirect(url_for('main'))
 
     return render_template('indexpy.html')
-
 
 
 # ------------------- Lawyer Signup -------------------
@@ -143,24 +144,30 @@ def lawyer_signup():
     if request.method == "POST":
         name = request.form.get("name")
         username = request.form.get("username")
+        email = request.form.get("email") # 💡 CRITICAL: Fetch the email input
         password = request.form.get("password")
         confirm_password = request.form.get("confirm_password")
         expertise = request.form.get("expertise")
 
-        if not name or not username or not password or not confirm_password or not expertise:
+        # 💡 Updated Validation
+        if not name or not username or not password or not confirm_password or not expertise or not email: 
             return render_template("lawyer_signup.html", error="Please fill in all fields")
 
         if password != confirm_password:
             return render_template("lawyer_signup.html", error="Passwords do not match")
 
-        if lawyers_collection.find_one({"username": username}):
-            return render_template("lawyer_signup.html", error="Username already exists")
+        # Check for unique username and email (optional: check both)
+        if lawyers_collection.find_one({"username": username}) or lawyers_collection.find_one({"email": email}):
+             return render_template("lawyer_signup.html", error="Username or Email already exists")
+
 
         hashed_password = generate_password_hash(password)
 
+        # 💡 CRITICAL: Save the email in the lawyers collection
         lawyers_collection.insert_one({
             "name": name,
             "username": username,
+            "email": email, 
             "password": hashed_password,
             "expertise": expertise
         })
@@ -191,10 +198,60 @@ def lawyer_login():
         session["lawyer_username"] = lawyer["username"]
         session["lawyer_name"] = lawyer["name"]
         session["lawyer_expertise"] = lawyer["expertise"]
+        session["lawyer_email"] = lawyer.get("email") # 💡 CRITICAL: Save the lawyer's email to the session
 
         return redirect(url_for("lawyer_dashboard"))
 
     return render_template("lawyer_login.html")
+
+
+# ------------------- API to Send Connection Request to Lawyer -------------------
+@app.route('/api/request-connect', methods=['POST'])
+def api_request_connect():
+    # 1. Check User Session
+    if 'email' not in session or session.get('user_type') != 'user':
+        return jsonify({"error": "Unauthorized. Please log in as a user."}), 401
+
+    data = request.get_json()
+    lawyer_email = data.get('lawyer_email')
+    lawyer_name = data.get('lawyer_name')
+    user_email = session['email']
+    user_name = session['username']
+
+    if not lawyer_email:
+        return jsonify({"error": "No lawyer email provided"}), 400
+
+    # 2. Fetch the user's LATEST case query for the lawyer's context
+    latest_case = history_cases.find_one(
+        {"email": user_email},
+        sort=[("timestamp", -1)]
+    )
+
+    case_summary = "No previous case history."
+    if latest_case and latest_case.get('query'):
+        # Take the user's query and the predicted sections
+        query = latest_case['query']
+        sections = ", ".join(latest_case.get("predicted_sections", []))
+        # Limit query to 100 chars for summary
+        case_summary = f"Latest Query: {query[:100]}... | Predicted Areas: {sections}"
+
+
+    # 3. Save the Request to the new collection
+    try:
+        lawyer_requests_collection.insert_one({
+            "lawyer_email": lawyer_email,
+            "lawyer_name": lawyer_name,
+            "user_email": user_email,
+            "user_name": user_name,
+            "request_date": datetime.now(),
+            "case_summary": case_summary,
+            "status": "pending"
+        })
+    except Exception as e:
+        print(f"Error saving request to DB: {e}")
+        return jsonify({"error": "Failed to save request to database."}), 500
+
+    return jsonify({"message": "Connection request sent successfully!"}), 200
 
 
 # ------------------- Lawyer Dashboard -------------------
@@ -202,15 +259,30 @@ def lawyer_login():
 def lawyer_dashboard():
     if "lawyer_username" not in session:
         return redirect(url_for("lawyer_login"))
+        
+    lawyer_email = session.get("lawyer_email")
+    
+    pending_requests = []
+    if lawyer_email and lawyer_requests_collection:
+        # Fetch pending requests for this lawyer using their email
+        requests_cursor = lawyer_requests_collection.find({"lawyer_email": lawyer_email, "status": "pending"}).sort("request_date", -1)
+        for req in requests_cursor:
+            req['request_date_str'] = req['request_date'].strftime("%b %d, %Y")
+            # We need the user's name, case summary, and date
+            pending_requests.append({
+                'id': str(req['_id']),
+                'user_name': req['user_name'],
+                'case_type': req['case_summary'], # Using the case summary for the 'case_type' column
+                'request_date': req['request_date_str']
+            })
+
     return render_template("lawyer_dashboard.html",
                            lawyer_name=session["lawyer_name"],
-                           expertise=session["lawyer_expertise"])
+                           expertise=session["lawyer_expertise"],
+                           # Pass the dynamic requests data to the template
+                           pending_requests=pending_requests)
 
 
-
-
-
-# ------------------- Find Lawyers -------------------
 # ------------------- Find Lawyers -------------------
 @app.route('/find-lawyer')
 def find_lawyer():
@@ -221,11 +293,11 @@ def find_lawyer():
     try:
         # Fetches name, expertise, and email for display
         lawyers = list(lawyers_collection.find({}, {"_id": 0, "name": 1, "expertise": 1, "email": 1}))
-        print(f"✅ Found {len(lawyers)} lawyers.") # This line confirms the fetch in your console
+        print(f"✅ Found {len(lawyers)} lawyers.") 
     except Exception as e:
         print(f"❌ Error fetching lawyers: {e}")
 
-    return render_template('find_lawyer.html', lawyers=lawyers) # Passes the list to the template
+    return render_template('find_lawyer.html', lawyers=lawyers) 
 
 # ------------------- API to Fetch Lawyers (for JS/Search) -------------------
 @app.route('/api/lawyers', methods=['GET'])

@@ -2,24 +2,232 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LawPilot - Lawyer Dashboard</title>
+
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 </head>
-<body class="login-body">
-    <div class="login-container">
-        <div class="login-header">
-            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}"
-                 alt="LawPilot Logo" class="login-logo">
-            <h1>Welcome, {{ lawyer_name }}</h1>
-            <p class="slogan">Expertise: {{ expertise }}</p>
+<body class="dashboard-body">
+    <header class="dashboard-header">
+        <div class="header-left">
+            <img src="{{ url_for('static', filename='jpg2png/business-law-icon-vector-21009337.png') }}" alt="LawPilot Logo"
+                class="header-logo">
+            <span class="header-app-name">
+                LawPilot <span class="header-slogan">AI-Driven Legal Platform</span>
+            </span>
         </div>
 
-        <div class="login-card">
-            <p>You are logged in as a Lawyer.</p>
-            <form action="/logout" method="POST">
-                <button type="submit" class="sign-in-button">Logout</button>
+        <div class="header-right">
+            <span class="user-info">
+                <i class="fas fa-user-tie"></i>
+                {{ lawyer_name }} ({{ expertise }})
+            </span>
+            <form action="/logout" method="POST" style="display:inline;">
+                <button type="submit" class="logout-button">
+                    <i class="fas fa-sign-out-alt"></i> Logout
+                </button>
             </form>
         </div>
+    </header>
+
+    <div class="dashboard-main-content">
+        <aside class="dashboard-sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li class="nav-item active" data-target="aiAssistantSection">
+                        <a href="#"><i class="fas fa-robot"></i> AI Assistant</a>
+                    </li>
+                    <li class="nav-item" data-target="userRequestsSection">
+                        <a href="#" class="sidebar-link"> <i class="fas fa-handshake"></i> User Requests
+                        </a>
+                    </li>
+                    <li class="nav-item" data-target="myClientsCasesSection">
+                        <a href="#"><i class="fas fa-file-alt"></i>Clients/Cases</a>
+                    </li>
+                    <li class="nav-item" data-target="settingsSection">
+                        <a href="#"><i class="fas fa-cog"></i> Settings</a>
+                    </li>
+                </ul>
+            </nav>
+            <div class="sidebar-footer">
+                <p>&copy; 2025 LawPilot</p>
+            </div>
+        </aside>
+
+        <div class="main-content-wrapper">
+
+            <main id="aiAssistantSection" class="dashboard-chat-area main-content-section active">
+                <div class="chat-header">
+                    <i class="fas fa-robot chat-icon"></i>
+                    <div class="chat-header-text">
+                        <h2>Internal Legal Assistant</h2>
+                        <p>Ask for case law, document drafts, or research summaries</p>
+                    </div>
+                </div>
+
+                <div class="chat-messages" id="chatMessages">
+                    <div class="chat-bubble ai-message">
+                        "Welcome back, {{ lawyer_name }}! How can I assist you with your legal research or drafting needs today?"
+                        <span class="message-timestamp">{{ current_time }}</span>
+                    </div>
+                </div>
+
+                <div class="chat-input-area">
+                    <textarea class="chat-textarea" placeholder="Enter your legal query or task..."></textarea>
+                    <button class="chat-send-button">
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </div>
+            </main>
+
+            <<section id="userRequestsSection" class="main-content-section hidden">
+    <div class="card full-width-card">
+        <h3><i class="fas fa-handshake"></i> New User Connection Requests</h3>
+        <p>Users who have requested your legal services will appear here. The case type column shows the user's latest query/prediction summary.</p>
+        
+        <div class="search-bar">
+            <input type="text" id="requestSearchInput" placeholder="Filter by name, case type...">
+            <button onclick="filterRequests()"><i class="fas fa-filter"></i> Filter</button>
+        </div>
+        
+        {% if pending_requests %}
+        <table class="requests-table">
+            <thead>
+                <tr>
+                    <th>User Name</th>
+                    <th>Case Type / Query Summary</th>
+                    <th>Request Date</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody id="requestTableBody"> 
+                {% for request in pending_requests %}
+                <tr>
+                    <td><i class="fas fa-user"></i> {{ request.user_name }}</td>
+                    <td>{{ request.case_type }}</td>
+                    <td>{{ request.request_date }}</td>
+                    <td>
+                        <button class="action-button accept-btn" data-request-id="{{ request.id }}"><i class="fas fa-check"></i> Accept</button>
+                        <button class="action-button reject-btn" data-request-id="{{ request.id }}"><i class="fas fa-times"></i> Decline</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        
+        {% else %}
+        <p class="placeholder-text" style="text-align: center; margin-top: 15px; color: green;">
+            <i class="fas fa-smile"></i> You have no pending connection requests at this time.
+        </p>
+        {% endif %}
     </div>
+</section>
+
+            <section id="myClientsCasesSection" class="main-content-section hidden">
+                <div class="card full-width-card">
+                    <h3><i class="fas fa-briefcase"></i> Clients & Active Cases</h3>
+                    <p>A summary of your current and closed cases, sorted by status.</p>
+
+                    <div class="cases-stats-grid">
+                        <div class="stat-box"><span><i class="fas fa-hourglass-half"></i> In Progress</span> <strong>{{ active_cases_count | default(7) }}</strong></div>
+                        <div class="stat-box"><span><i class="fas fa-balance-scale"></i> Upcoming Hearings</span> <strong>{{ upcoming_hearings | default(2) }}</strong></div>
+                        <div class="stat-box"><span><i class="fas fa-archive"></i> Closed Cases</span> <strong>{{ closed_cases_count | default(15) }}</strong></div>
+                    </div>
+
+                    <p id="caseStatusMessage" style="text-align: center; margin-top: 20px; color: gray;">
+                        <i class="fas fa-info-circle"></i> View or add new cases via the case management system.
+                    </p>
+                </div>
+            </section>
+
+            <section id="settingsSection" class="main-content-section hidden">
+                <div class="card full-width-card">
+                    <h3><i class="fas fa-cog"></i> Settings</h3>
+                    <div class="setting-item">
+                        <span>Dark Mode</span>
+                        <label class="switch">
+                            <input type="checkbox" id="darkModeToggle">
+                            <span class="slider round"></span>
+                        </label>
+                    </div>
+                    <div class="setting-item">
+                        <span>Update Expertise</span>
+                        <button class="setting-button"><i class="fas fa-pen"></i> Edit Profile</button>
+                    </div>
+                    <p class="placeholder-text">Manage your profile, billing, and system preferences.</p>
+                </div>
+            </section>
+        </div>
+
+        <aside class="dashboard-right-sidebar">
+            <div class="quick-stats-card card">
+                <h3><i class="fas fa-chart-line"></i> *Lawyer Metrics*</h3>
+                <div class="stat-item">
+                    <span>Active Cases</span>
+                    <strong>{{ active_cases_count | default(7) }}</strong>
+                </div>
+                <div class="stat-item">
+                    <span>*Client Rating*</span>
+                    <strong>{{ avg_rating | default('4.8') }}<i class="fas fa-star star-icon"></i></strong>
+                </div>
+                <div class="stat-item">
+                    <span>*Open Requests*</span>
+                    <strong>{{ open_requests | default(3) }}</strong>
+                </div>
+            </div>
+
+            <div class="recent-activity-card card">
+                <h3><i class="fas fa-bell"></i> *Recent Activity*</h3>
+                <ul class="activity-list">
+                    <li><span class="activity-type new-request"><i class="fas fa-plus-circle"></i></span> New request from *Alice Johnson*.</li>
+                    <li><span class="activity-type case-update"><i class="fas fa-arrow-up"></i></span> Case #102 updated to *'Discovery'* phase.</li>
+                    <li><span class="activity-type payment"><i class="fas fa-dollar-sign"></i></span> *$500* retainer received from Client X.</li>
+                    <li><span class="activity-type assistant"><i class="fas fa-robot"></i></span> AI research complete: *'Recent IP rulings'*.</li>
+                </ul>
+            </div>
+        </aside>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js', v='1.0.1') }}"></script>
+    <script>
+        // Placeholder for the necessary JavaScript to switch sections
+        document.addEventListener('DOMContentLoaded', () => {
+            const navItems = document.querySelectorAll('.sidebar-nav .nav-item');
+            const sections = document.querySelectorAll('.main-content-section');
+
+            navItems.forEach(item => {
+                item.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    
+                    // Remove active class from all
+                    navItems.forEach(i => i.classList.remove('active'));
+                    sections.forEach(s => s.classList.add('hidden'));
+
+                    // Add active class to clicked item
+                    item.classList.add('active');
+
+                    // Show target section
+                    const targetId = item.getAttribute('data-target');
+                    const targetSection = document.getElementById(targetId);
+                    if (targetSection) {
+                        targetSection.classList.remove('hidden');
+                        targetSection.classList.add('active'); // Re-add active if needed for styling
+                    }
+                });
+            });
+            
+            // Initial load check for section activation
+            const activeSection = document.querySelector('.main-content-section.active');
+            if (activeSection) {
+                 // Ensure only one is initially active and visible
+                 sections.forEach(s => s.classList.add('hidden'));
+                 activeSection.classList.remove('hidden');
+            }
+        });
+    </script>
 </body>
 </html>

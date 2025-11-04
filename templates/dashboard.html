@@ -35,6 +35,7 @@
     </header>
 
     <div class="dashboard-main-content">
+        <!-- Sidebar -->
         <aside class="dashboard-sidebar">
             <nav class="sidebar-nav">
                 <ul>
@@ -42,8 +43,7 @@
                         <a href="#"><i class="fas fa-robot"></i> AI Assistant</a>
                     </li>
                     <li class="nav-item" data-target="findLawyerSection">
-                        <a href="#" class="sidebar-link"> <i class="fas fa-gavel"></i> Find Lawyer
-                        </a>
+                        <a href="#"><i class="fas fa-gavel"></i> Find Lawyer</a>
                     </li>
                     <li class="nav-item" data-target="myCasesSection">
                         <a href="#"><i class="fas fa-file-alt"></i> My Cases</a>
@@ -58,8 +58,10 @@
             </div>
         </aside>
 
+        <!-- Main Content -->
         <div class="main-content-wrapper">
 
+            <!-- AI Assistant -->
             <main id="aiAssistantSection" class="dashboard-chat-area main-content-section active">
                 <div class="chat-header">
                     <i class="fas fa-robot chat-icon"></i>
@@ -79,12 +81,18 @@
 
                 <div class="chat-input-area">
                     <textarea class="chat-textarea" placeholder="Ask a legal question..."></textarea>
-                    <button class="chat-send-button">
-                        <i class="fas fa-paper-plane"></i>
-                    </button>
+                    <div class="chat-actions">
+                        <button id="searchLawyersBtn" class="search-lawyers-button" disabled title="Search lawyers for predicted BNS sections">
+                            <i class="fas fa-user-md"></i>
+                        </button>
+                        <button class="chat-send-button">
+                            <i class="fas fa-paper-plane"></i>
+                        </button>
+                    </div>
                 </div>
             </main>
 
+            <!-- Find Lawyer -->
             <section id="findLawyerSection" class="main-content-section hidden">
                 <div class="card full-width-card">
                     <h3><i class="fas fa-gavel"></i> Lawyer Directory</h3>
@@ -108,12 +116,12 @@
                                 <th>Action</th>
                             </tr>
                         </thead>
-                        <tbody id="lawyerTableBody"> 
-                            </tbody>
+                        <tbody id="lawyerTableBody"></tbody>
                     </table>
                 </div>
             </section>
 
+            <!-- My Cases -->
             <section id="myCasesSection" class="main-content-section hidden">
                 <div class="card full-width-card">
                     <h3><i class="fas fa-file-alt"></i> My Cases</h3>
@@ -127,9 +135,18 @@
                         {% if cases %}
                             <ul class="case-list">
                                 {% for case in cases %}
-                                <li>
-                                    <strong>Case #{{ case.id }}:</strong> {{ case.title }} - 
-                                    <em>{{ case.status }}</em>
+                                <li class="case-item">
+                                    <div class="case-header">
+                                        <span class="case-id">Case #{{ case.id }}</span>
+                                        <span class="case-datetime">{{ case.title.split(' - ')[0] }}</span>
+                                    </div>
+                                    <p class="case-summary">{{ case.title.split(' - ')[1] | default(case.title, true) }}</p>
+                                    <div class="case-footer">
+                                        <span class="case-prediction-label">Prediction:</span>
+                                        <span class="case-status case-status-{{ case.status | lower | replace(' ', '-') }}">
+                                            {{ case.status }}
+                                        </span>
+                                    </div>
                                 </li>
                                 {% endfor %}
                             </ul>
@@ -140,6 +157,7 @@
                 </div>
             </section>
 
+            <!-- Settings -->
             <section id="settingsSection" class="main-content-section hidden">
                 <div class="card full-width-card">
                     <h3><i class="fas fa-cog"></i> Settings</h3>
@@ -159,6 +177,7 @@
             </section>
         </div>
 
+        <!-- Right Sidebar -->
         <aside class="dashboard-right-sidebar">
             <div class="quick-stats-card card">
                 <h3><i class="fas fa-bolt"></i> Quick Stats</h3>
